@@ -209,23 +209,20 @@ class Migrator
     end
 
     labels = Set[]
-    changes.each do |x|
-      del = @labels.fetch(x[:field], Hash[])[x[:oldvalue]]
-      add = @labels.fetch(x[:field], Hash[])[x[:newvalue]]
-      labels.delete(del) if del
-      labels.add(add) if add
-      if x[:field] == "status" and x[:newvalue] == "closed"
-        closed = x[:time]
+    if !ticket[:priority].nil? && !ticket[:priority].empty?
+      labels.add("priority: #{ticket[:priority].downcase}")
+    end
+    if !ticket[:component].nil? && !ticket[:component].empty?
+      labels.add("#{ticket[:component].downcase}")
+    end
+    if !ticket[:keywords].nil? && !ticket[:keywords].empty?
+      ticket[:keywords].split.each do |keyword|
+        keyword.tr!(',', '')
+        if !keyword.nil? && !keyword.empty?
+          labels.add("#{keyword.downcase}")
+        end
       end
     end
-    labels.add(@labels.fetch('component', Hash[])[ticket[:component]])
-    labels.add(@labels.fetch('type', Hash[])[ticket[:type]])
-    labels.add(@labels.fetch('resolution', Hash[])[ticket[:resolution]])
-    labels.add(@labels.fetch('priority', Hash[])[ticket[:priority]])
-    labels.add(@labels.fetch('severity', Hash[])[ticket[:severity]])
-    labels.add(@labels.fetch('version', Hash[])[ticket[:version]])
-    # If the field is not set, it will be nil and generate an unprocessable json
-    labels.delete(nil)
 
     issue = {
       "title" => ticket[:summary],
